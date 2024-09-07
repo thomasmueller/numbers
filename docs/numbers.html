@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+  <title>Test</title>
+    <style>
+body {
+/* margin: 0px; padding: 0px;
+*/
+  background: #fff;
+  font: 20px Helvetica Neue, sans-serif;
+}
+
+.slidecontainer {
+  width: 100%;
+}
+
+.slider {
+  width: 50%;
+}
+
+html, body {
+  width:  100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overscroll-behavior: contain;
+}
+
+     </style>
+  <!-- <link rel="stylesheet" href="style.css" type="text/css"> -->
+ </head>
+<body>
+
+<canvas id="c" style="position:absolute; left:0px; top:0px;" width="1440" height="744">
+</canvas>
+
+<iframe id='fireworks' style="border:0; border:none;" src="about:blank" width="0%" height="0%"></iframe>  
+
+<script>
+
+findMax = 10;
+findCount = 0;
+find = "10";
+
+fireworksEnabled = false;
+
+mid = 5;
+range = 5;
+
+function roundPowerOf10(v) {
+    return Math.pow(10, Math.floor(Math.log10(v) + 0.1));
+}
+
+function numberWithTousandSeparator(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'");
+}
+
+function findNext() {
+  start = null;
+  while (true) {
+    x = numberWithTousandSeparator(Math.floor(Math.random() * findMax));
+    findMax *= 1.5;
+    if (findMax > 3000) {
+      findMax = 3000;
+    }
+    if (x != find) {
+      find = x;
+      break;
+    }
+  }
+  console.log(find);
+  mid = 5;
+  range = 5;
+  draw();
+}
+
+function draw() {
+  var canvas = document.getElementById('c');
+  var ctx = canvas.getContext('2d');
+  ctx.canvas.width  = window.innerWidth;
+  ctx.canvas.height = window.innerHeight;
+  if (fireworksEnabled) return;
+  ctx.strokeStyle = 'black';
+  ctx.lineWidth = '5';
+  ctx.strokeRect(0, ctx.canvas.height / 2, ctx.canvas.width, 0);
+  
+  ctx.font = "30px Georgia";
+  
+  if (find != "") {
+    s = "? " + numberWithTousandSeparator(find) + " ?";
+    length = ctx.measureText(s).width;
+    ctx.fillText(s, ctx.canvas.width / 2 - length / 2, 50);
+  }
+  
+  r = roundPowerOf10(range);
+  if (r < 1) {
+    r = 1;
+  }
+  left = mid - range;
+  right = mid + range;
+  count = 0;
+  last = 0;
+  x = Math.floor(left / r) * r;
+  // x = 0;
+  printed = "";
+  for(; x <= right; x += r) {
+    if (x < left) {
+      continue;
+    }
+    count++;
+    xx = (x - mid) / range * ctx.canvas.width + canvas.width / 2;
+    // console.log("x " + x + " " + xx);
+    ctx.beginPath();
+    // ctx.arc(ctx.canvas.width / 2, ctx.canvas.height / 2, 10, 0, 2 * Math.PI, true);
+    ctx.arc(xx, ctx.canvas.height / 2, 10, 0, 2 * Math.PI, true);
+    ctx.fill();
+    s = numberWithTousandSeparator(x);
+    length = ctx.measureText(s).width;
+    xx -= length / 2;
+    if (xx > 0 && xx < ctx.canvas.width && xx > last + 10) {
+      printed += " " + s;
+      ctx.fillText(s, xx, ctx.canvas.height / 2 + 50);
+      last = xx + length;
+    }
+  }
+  
+
+  // console.log("printed >" + printed + "<");
+  if (printed == " " + find) {
+    findNext();
+    findCount++;
+    if (findCount % 5 == 0) {
+      fireworksEnabled = true;
+      draw();      
+      f = document.getElementById('fireworks');
+      f.src="numberFireworks.html";
+      f.width="100%";
+      f.height="100%";
+      window.setTimeout(function () {
+        f = document.getElementById('fireworks');
+        f.src="about:blank";
+        f.width="0%";
+        f.height="0%";
+        fireworksEnabled = false;
+        draw();
+      }, 10000)
+    }
+  }
+  
+  // console.log("count " + count + " mid " + mid + " " + left + "-" + right + " r " + r + " x " + x);
+  if (count >= 10 || r <= 1) {
+    return;
+  } 
+  r /= 10;
+  x = Math.floor(left / r) * r;
+  for(; x <= right; x += r) {
+    if (x < left) {
+      continue;
+    }
+    xx = (x - mid) / range * ctx.canvas.width + canvas.width / 2;
+    // console.log("x " + x + " " + xx);
+    ctx.beginPath();
+    // ctx.arc(ctx.canvas.width / 2, ctx.canvas.height / 2, 10, 0, 2 * Math.PI, true);
+    ctx.arc(xx, ctx.canvas.height / 2, 4, 0, 2 * Math.PI, true);
+    ctx.stroke();
+  }
+  
+  // console.log("count2 " + count + " mid " + mid + " " + left + "-" + right + " r " + r + " x " + x);
+  
+}
+draw();
+
+start = null;
+
+function enableEvents() {
+  document.addEventListener('touchstart', function (event) {
+    if (fireworksEnabled) return;
+    start = event.changedTouches[0];
+  });
+  document.addEventListener('touchend', function (event) {
+    if (fireworksEnabled) return;
+    start = null;
+  });
+  document.addEventListener('mouseup', function (event) {
+    if (fireworksEnabled) return;
+    start = null;
+  });
+  document.addEventListener('mousedown', function (event) { 
+    if (fireworksEnabled) return;
+    start = event;
+  });
+  document.addEventListener('mousemove', function (event) {
+    if (fireworksEnabled) return;
+    move(event);
+  });
+  document.addEventListener('touchmove', function (event) {
+    if (fireworksEnabled) return;
+    move(event.changedTouches[0]);
+  });
+}
+enableEvents();
+function move(event) {
+  if (start == null) {
+    return;
+  }
+  xplus = event.clientX - start.clientX;
+  yplus = event.clientY - start.clientY;
+  if (Math.abs(yplus) < 10 && Math.abs(yplus) < Math.abs(xplus * 10)) {
+    yplus = 0;
+  }
+  if (Math.abs(xplus) < 10 && Math.abs(xplus) < Math.abs(yplus * 10)) {
+    xplus = 0;
+  }
+  mid -= range * xplus / window.innerWidth;
+  range *= 1 + (yplus / (window.innerHeight / 2)); 
+  if (range < 1) {
+    range = 1;
+  }
+  if (range > 6000) {
+    range = 6000;
+  }
+  if (mid < -1000) {
+    mid = -1000;
+  }
+  if (mid > 3000) {
+    mid = 3000;
+  }
+  if (xplus == 0 && yplus == 0) {
+    return;
+  }
+  start = event;
+  draw();
+}
+
+/*
+function fullscreen(){
+  document.getElementById('c').removeEventListener("click", fullscreen);
+  var el = document.getElementById('c');
+  if(el.webkitRequestFullScreen) {
+    console.log("fx");
+    el.webkitRequestFullScreen();
+    console.log("fx");
+  } else {
+    el.mozRequestFullScreen();
+  }            
+  draw();
+}
+document.getElementById('all').addEventListener("click", fullscreen);
+*/
+
+</script>
+
+ 
+
+
+
+</body></html>

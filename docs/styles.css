@@ -1,8 +1,9 @@
 .top {
-    margin: 256px;
+    margin-top: 128px;
+    margin-left: 256px;
     width: 100%;
     font-family: 'Montserrat', sans-serif;
-    font-size: 1em;
+    font-size: 4em;
 }
 
 .top textarea {
